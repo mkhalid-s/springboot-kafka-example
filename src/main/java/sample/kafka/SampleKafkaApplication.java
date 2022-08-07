@@ -20,21 +20,34 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
 
 @SpringBootApplication
+@RestController
 public class SampleKafkaApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SampleKafkaApplication.class, args);
     }
-
+    private Producer producer;
     @Bean
     public ApplicationRunner runner(Producer producer) {
+        this.producer = producer;
         return (args) -> {
             for(int i = 1; i < 20; i++) {
-                    producer.send(new SampleMessage(i, "A simple test message"));
+                    producer.send(new SampleMessage(i, "A simple test message "+ Instant.now()));
             }
         };
+    }
+
+    @PostMapping("/send")
+    public HttpStatus sendKafkaMessage(@RequestBody final String msg){
+        System.out.println(msg);
+        this.producer.send(new SampleMessage(0, msg ));
+        return HttpStatus.CREATED;
     }
 
 }
